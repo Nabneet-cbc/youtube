@@ -12,7 +12,7 @@ download_ffmpeg()
 app = FastAPI()
 
 # ✅ Static YouTube URL (replace this with your own)
-STATIC_URL = "https://www.youtube.com/watch?v=dQw4w9WgXcQ"
+STATIC_URL = "https://www.youtube.com/watch?v=ScKCy2udln8&t=632s"
 
 @app.get("/")
 def home():
