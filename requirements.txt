@@ -1,5 +1,3 @@
 fastapi
 uvicorn
 pytube
-openai-whisper
-imageio-ffmpeg

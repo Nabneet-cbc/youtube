@@ -1,31 +1,35 @@
-import os
-import uuid
 from fastapi import FastAPI
 from pytube import YouTube
-import whisper
+from fastapi.responses import FileResponse
+import os
 
 app = FastAPI()
 
-STATIC_URL = "https://www.youtube.com/watch?v=ScKCy2udln8"
+@app.get("/download")
+def download_video():
+# Static YouTube URL
+    url = "https://www.youtube.com/watch?v=kv7cdS0cEjQ"
 
-@app.get("/")
-def home():
-    return {"message": "YouTube Audio Transcription API"}
 
-@app.get("/transcribe")
-def transcribe_youtube():
-    yt = YouTube(STATIC_URL)
-    stream = yt.streams.filter(only_audio=True).first()
+    try:
+        yt = YouTube(url)
+        stream = yt.streams.get_highest_resolution()
 
-    filename = f"{uuid.uuid4()}.mp4"
-    output_dir = "downloads"
-    os.makedirs(output_dir, exist_ok=True)
-    filepath = os.path.join(output_dir, filename)
+        output_path = "downloads"
+        os.makedirs(output_path, exist_ok=True)
 
-    stream.download(output_path=output_dir, filename=filename)
+        # Download the video
+        filepath = stream.download(output_path=output_path)
+        filename = os.path.basename(filepath)
 
-    model = whisper.load_model("tiny")
-    result = model.transcribe(filepath)
+        # Return download link or serve the file directly
+        return {"download_url": f"/video/{filename}"}
+    except Exception as e:
+        return {"error": str(e)}
 
-    os.remove(filepath)
-    return {"transcription": result["text"]}
+@app.get("/video/{filename}")
+def serve_video(filename: str):
+    file_path = os.path.join("downloads", filename)
+    if os.path.exists(file_path):
+        return FileResponse(path=file_path, media_type='video/mp4', filename=filename)
+    return {"error": "File not found"}
