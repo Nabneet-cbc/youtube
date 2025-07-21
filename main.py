@@ -1,35 +1,32 @@
-from fastapi import FastAPI
-from pytube import YouTube
-from fastapi.responses import FileResponse
 import os
+import uuid
+from fastapi import FastAPI, Query
+from pytube import YouTube
 
 app = FastAPI()
 
+@app.get("/")
+def home():
+    return {"message": "YouTube Video Downloader API is running."}
+
 @app.get("/download")
-def download_video():
-# Static YouTube URL
-    url = "https://www.youtube.com/watch?v=kv7cdS0cEjQ"
-
-
+def download_youtube_video(url: str = Query(...)):
     try:
         yt = YouTube(url)
         stream = yt.streams.get_highest_resolution()
 
-        output_path = "downloads"
-        os.makedirs(output_path, exist_ok=True)
+        os.makedirs("downloads", exist_ok=True)
+        filename = f"{uuid.uuid4()}.mp4"
+        filepath = os.path.join("downloads", filename)
 
-        # Download the video
-        filepath = stream.download(output_path=output_path)
-        filename = os.path.basename(filepath)
+        stream.download(output_path="downloads", filename=filename)
 
-        # Return download link or serve the file directly
-        return {"download_url": f"/video/{filename}"}
+        return {
+            "message": "Video downloaded successfully",
+            "video_title": yt.title,
+            "filename": filename,
+            "filepath": filepath
+        }
+
     except Exception as e:
         return {"error": str(e)}
-
-@app.get("/video/{filename}")
-def serve_video(filename: str):
-    file_path = os.path.join("downloads", filename)
-    if os.path.exists(file_path):
-        return FileResponse(path=file_path, media_type='video/mp4', filename=filename)
-    return {"error": "File not found"}
