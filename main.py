@@ -4,15 +4,9 @@ from fastapi import FastAPI
 from pytube import YouTube
 import whisper
 
-# ✅ FFmpeg setup for Render
-os.environ["PATH"] += os.pathsep + os.path.join(os.path.expanduser("~"), ".local", "bin")
-from ffmpeg_downloader import download_ffmpeg
-download_ffmpeg()
-
 app = FastAPI()
 
-# ✅ Static YouTube URL (replace this with your own)
-STATIC_URL = "https://www.youtube.com/watch?v=ScKCy2udln8&t=632s"
+STATIC_URL = "https://www.youtube.com/watch?v=ScKCy2udln8"
 
 @app.get("/")
 def home():
@@ -20,7 +14,6 @@ def home():
 
 @app.get("/transcribe")
 def transcribe_youtube():
-    # ✅ Step 1: Download audio
     yt = YouTube(STATIC_URL)
     stream = yt.streams.filter(only_audio=True).first()
 
@@ -31,11 +24,8 @@ def transcribe_youtube():
 
     stream.download(output_path=output_dir, filename=filename)
 
-    # ✅ Step 2: Transcribe
-    model = whisper.load_model("tiny")  # faster, lower RAM
+    model = whisper.load_model("tiny")
     result = model.transcribe(filepath)
 
-    # ✅ Step 3: Cleanup
     os.remove(filepath)
-
     return {"transcription": result["text"]}

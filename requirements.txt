@@ -2,4 +2,4 @@ fastapi
 uvicorn
 pytube
 openai-whisper
-ffmpeg-downloader
+imageio-ffmpeg
